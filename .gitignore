@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+chatgpt_apikey
+models/*
+.env
 
 # C extensions
 *.so
