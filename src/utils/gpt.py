@@ -1,9 +1,6 @@
-from langchain.llms import OpenAI
 import numpy as np
 import pandas as pd
-import json
-import time
-import os
+import logging
 from langchain import PromptTemplate, LLMChain
 from langchain.llms import GPT4All
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
@@ -40,12 +37,8 @@ def prepare_model(llm: AGPT4All):
     prompt_template = """
     I will give you an internet discussion as a text.
     Text: \"{text}\"
-    You are a helpful, respectful and honest assistant. {prompt_ask} Do not use weird caracters or write a list with numbers.
-    """
-    # Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.
-    # If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.
-    
-    
+    You are a helpful, respectful and honest assistant. {prompt_ask}
+    """    
     prompt = PromptTemplate(template=prompt_template, input_variables=["text", "prompt_ask"])
     
     llm_chain = LLMChain(prompt=prompt, llm=llm)
@@ -66,7 +59,7 @@ def launch_model(model_local_path: str):
     )
     return llm
 
-async def run(model_local_path: str, prompt_ask: str, text: str):
+async def gpt_pipeline_predict(model_local_path: str, prompt_ask: str, text: str):
     llm = launch_model(model_local_path)
     llm_chain = prepare_model(llm)
     return await run_prediction(llm_chain, text, prompt_ask)
