@@ -99,7 +99,9 @@ class PositivityCog(commands.Cog):
 
         logging.info("Computing sentiment analysis")
         await progress_bar.edit(content = '==>.')
-        sentiment_analysis = await self._get_sentiment_analysis(messages)
+        sentiment_analysis = "No messages found"
+        if len(messages) > 0:
+            sentiment_analysis = await self._get_sentiment_analysis(messages)
 
         # after some things finish
         await progress_bar.edit(content = '===>')

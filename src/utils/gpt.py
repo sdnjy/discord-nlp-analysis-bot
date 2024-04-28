@@ -1,16 +1,15 @@
-import numpy as np
-import pandas as pd
-import logging
-from langchain import PromptTemplate, LLMChain
-from langchain.llms import GPT4All
+import os
+from langchain.prompts import PromptTemplate
+from langchain.chains.llm import LLMChain
+from langchain_community.llms.gpt4all import GPT4All
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
-
-from langchain.llms import GPT4All
-from functools import partial
-from typing import Any, List
 from langchain.callbacks.manager import AsyncCallbackManagerForLLMRun
 from langchain.llms.utils import enforce_stop_tokens
+
+from functools import partial
+from typing import Any, List
+
 
 # https://github.com/langchain-ai/langchain/issues/5210#issuecomment-1646581246
 class AGPT4All(GPT4All):
@@ -20,7 +19,8 @@ class AGPT4All(GPT4All):
             text_callback = partial(run_manager.on_llm_new_token, verbose=self.verbose)
         text = ""
         params = {**self._default_params(), **kwargs}
-        for token in self.client.generate(prompt,streaming = True, **params):
+        params['streaming'] = True
+        for token in self.client.generate(prompt, **params):
             if text_callback:
                 await text_callback(token)
             text += token
@@ -31,17 +31,18 @@ class AGPT4All(GPT4All):
 
 async def run_prediction(llm_chain: LLMChain, text: str, prompt_ask: str):
     input_dict = {"text": text, "prompt_ask": prompt_ask}
-    return await llm_chain.arun(input_dict)
+    res = await llm_chain.ainvoke(input_dict)
+    return res
 
-def prepare_model(llm: AGPT4All):
+def prepare_prompt_model(llm: AGPT4All):
     prompt_template = """
-    I will give you an internet discussion as a text.
+    I will give you an internet discussion or a message from only one person as a text.
     Text: \"{text}\"
     You are a helpful, respectful and honest assistant. {prompt_ask}
     """    
     prompt = PromptTemplate(template=prompt_template, input_variables=["text", "prompt_ask"])
     
-    llm_chain = LLMChain(prompt=prompt, llm=llm)
+    llm_chain = prompt | llm
     return llm_chain
 
 def launch_model(model_local_path: str):
@@ -49,7 +50,7 @@ def launch_model(model_local_path: str):
     callbacks = [AsyncIteratorCallbackHandler()]
     
     # Verbose is required to pass to the callback manager
-    llm = AGPT4All(
+    llm = GPT4All(
         model=model_local_path,
         callbacks=callbacks,
         n_threads=8,
@@ -61,5 +62,5 @@ def launch_model(model_local_path: str):
 
 async def gpt_pipeline_predict(model_local_path: str, prompt_ask: str, text: str):
     llm = launch_model(model_local_path)
-    llm_chain = prepare_model(llm)
+    llm_chain = prepare_prompt_model(llm)
     return await run_prediction(llm_chain, text, prompt_ask)

@@ -10,9 +10,8 @@ from utils.discord_utils import get_discord_last_messages
 class SummaryCog(commands.Cog):
     _models_path = "models/"
     _models_files = {
-        "orca": "orca-mini-3b.ggmlv3.q4_0.bin",
-        "falcon": "ggml-model-gpt4all-falcon-q4_0.bin",
-        "llama": "llama-2-7b-chat.ggmlv3.q4_1.bin",
+        "falcon": "gpt4all-falcon-newbpe-q4_0.gguf",
+        "mistral": "mistral-7b-openorca.gguf2.Q4_0.gguf",
     }
 
     def __init__(self, bot: commands.Bot) -> None:
@@ -21,18 +20,19 @@ class SummaryCog(commands.Cog):
     @commands.hybrid_group(name="summary")
     async def summary(self, ctx: commands.Context) -> None:
         if ctx.invoked_subcommand is None:
-            await ctx.send(f'No, {ctx.subcommand_passed} is not cool')
+            await ctx.send(f'No, {ctx.subcommand_passed} is missing arguments')
 
 
     async def _make_summary(self, text: str):
-        model_local_path = os.path.join(self._models_path, self._models_files["llama"])
+        model_local_path = os.path.join(self._models_path, self._models_files["falcon"])
         
         start_time = time.time()
         logging.info(f"Input text: {text}")
-        summary = await gpt_pipeline_predict(model_local_path, prompt_ask="Write me a short and concise summary.", text=text)
+        prompt_ask = "Write me a short and concise summary of the previous text."
+        summary = await gpt_pipeline_predict(model_local_path, prompt_ask=prompt_ask, text=text)
         time_str = "%.2f" % (time.time() - start_time)
         logging.info(f"Time taken for summary: {time_str}s")
-        summary = "**Summary:**\n" + summary
+        summary = "**Summary:**\n" + str(summary)
         logging.info(summary)
         return summary
 
@@ -55,7 +55,9 @@ class SummaryCog(commands.Cog):
 
         logging.info("Computing summary")
         await progress_bar.edit(content = '==>.')
-        summary = await self._make_summary(messages)
+        summary = "No messages found"
+        if len(messages) > 0:
+            summary = await self._make_summary(messages)
 
         # Sending to discord the content
         await progress_bar.edit(content = '===>')

@@ -1,6 +1,34 @@
 # discord-analysis
+# Overview
 
-A small bot 
+This Discord Python bot is designed to analyze conversations within Discord servers. It utilizes Natural Language Processing (NLP) techniques to generate summaries of conversations, extract keywords, and perform sentiment analysis on messages exchanged within Discord channels.
+
+# Commands
+## Keywords
+Get keywords of the last x messages or the last x minutes. The `channel_name` is Optional.
+Example: `/keywords from_last number:2 unit:messages channel_name:general`
+
+## Positivity
+Get a sentiment analysis of the last x messages or the last x minutes. The `channel_name` is Optional.
+Example: `/positivity from_last number:2 unit:messages channel_name:general`
+
+## Summary
+Get a summary of the last x messages or the last x minutes. The `channel_name` is Optional.
+Example: `/summary from_last number:2 unit:messages channel_name:general`
+
+## How to setup
+- Download and install your models in `models/` folder.
+- Put your Discord API token in a `.env` file under the name `DISCORD_TOKEN`
+
+### Locally
+Install requirements `pip install -r requirements.txt`
+
+## How to run
+### Locally
+`python src/bot.py`
+
+### Docker
+TBD
 
 
 ## Other prompt ideas
@@ -9,9 +37,5 @@ A small bot
     
 
 ## TODO
-- fix print/add logging
-- remove useless entrypoints
 - add docker
-- remove useless files
-- /summary from_last number: 2 unit: messages channel_name: <#1139964453031510018>
 - add tests
